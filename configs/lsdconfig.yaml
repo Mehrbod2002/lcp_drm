@@ -1,0 +1,4 @@
+database: "sqlite3://./lsd.sqlite"
+frontend: "http://localhost:8990"
+lcpserver: "http://localhost:8989"
+# certificate: "path/to/certificate.pem"
