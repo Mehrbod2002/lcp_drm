@@ -26,9 +26,12 @@ func UploadFile(c *gin.Context) {
 	copyStr := c.PostForm("copy")
 	printStr := c.PostForm("print")
 	endStr := c.PostForm("end")
+	// startStr := c.PostForm("start")
+	username := c.PostForm("username")
+	password := c.PostForm("password")
 
-	if copyStr == "" || printStr == "" || endStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Title and Author are required"})
+	if copyStr == "" || printStr == "" || endStr == "" || password == "" || username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": ""})
 		return
 	}
 
@@ -50,6 +53,14 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
+	// cleanedDateStr := strings.Split(startStr, " (")[0]
+	// layout := "Mon Jan 02 2006 15:04:05 MST-0700"
+	// parsedTime, err := time.Parse(layout, cleanedDateStr)
+	// if err != nil {
+	// 	c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format. Use ISO 8601 format."})
+	// 	return
+	// }
+
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File upload failed"})
@@ -69,17 +80,6 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	username, err := GenerateRandomString(12)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Key generation failed"})
-		return
-	}
-
-	password, err := GenerateRandomString(12)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Key generation failed"})
-		return
-	}
 	cmd := exec.Command("/usr/bin/htpasswd", "-b", "/root/server/tmp/htpasswd", username, password)
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Encryption failed: %s\n", string(output))
@@ -105,7 +105,8 @@ func UploadFile(c *gin.Context) {
 	if mimeType == "application/pdf" {
 		mimeType = "application/pdf+lcp"
 	}
-	license, err := CreateLicense(uID, "user@example.com", key, mimeType, print, copy, end)
+
+	license, err := CreateLicense(uID, password, key, mimeType, print, copy, end)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "License creation failed"})
 		return
@@ -127,13 +128,23 @@ func UploadFile(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message":       "File encrypted and license created successfully",
 		"license":       string(license),
-		"username":      username,
-		"password":      password,
 		"download_link": fmt.Sprintf("/uploads/%s.lcpl", uID),
 	})
 }
 
-func CreateLicense(contentID, userEmail string, contentKey []byte, mime string, print, copy, end int) ([]byte, error) {
+func CreateLicense(contentID, userEmail string, contentKey []byte,
+	mime string, print, copy, end int) ([]byte, error) {
+
+	// startDate, err := ConvertToRFC3339UTC(parsedDate.Format(time.RFC3339))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// endDate, err := ConvertToRFC3339UTC(parsedDate.AddDate(0, 0, end).UTC().Format(time.RFC3339))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
 	now := time.Now()
 
 	hashBytes := sha256.Sum256([]byte(userEmail))
@@ -143,7 +154,7 @@ func CreateLicense(contentID, userEmail string, contentKey []byte, mime string, 
 		"id":       contentID,
 		"encryption": map[string]interface{}{
 			"user_key": map[string]interface{}{
-				"text_hint": "email",
+				"text_hint": "Password",
 				"algorithm": "http://www.w3.org/2001/04/xmlenc#sha256",
 				"value":     hash,
 			},
@@ -165,7 +176,7 @@ func CreateLicense(contentID, userEmail string, contentKey []byte, mime string, 
 			"copy":  copy,
 			"print": print,
 			"start": now.UTC().Format(time.RFC3339),
-			"end":   now.AddDate(0, 0, end).UTC().Format(time.RFC3339),
+			"end":   now.AddDate(0, 0, end).Format(time.RFC3339),
 		},
 	}
 
@@ -303,4 +314,19 @@ func GenerateRandomString(length int) (string, error) {
 	}
 
 	return s[:length], nil
+}
+
+func ConvertToRFC3339UTC(input string) (string, error) {
+	cleanedInput := strings.Replace(input, "GMT", "", 1)
+	cleanedInput = strings.TrimSpace(cleanedInput)
+
+	layout := time.RFC3339
+	parsedTime, err := time.Parse(layout, cleanedInput)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse time: %v", err)
+	}
+	utcTime := parsedTime.UTC()
+	formattedTime := utcTime.Format(time.RFC3339)
+
+	return formattedTime, nil
 }
