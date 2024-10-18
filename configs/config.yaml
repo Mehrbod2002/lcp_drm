@@ -2,7 +2,7 @@ profile: "basic"
 lcp:
     host: "127.0.0.1"
     port: 8989
-    public_base_url: "https://lsp.dwbank.org:8989"
+    public_base_url: "https://bookadd.ir:8989"
     database: "sqlite3://file:/root/server/db/lcp.sqlite?cache=shared&mode=rwc"
     auth_file: "/root/server/tmp/htpasswd"
 certificate:

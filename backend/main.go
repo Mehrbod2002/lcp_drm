@@ -10,8 +10,9 @@ import (
 func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	r.MaxMultipartMemory = 100 << 20
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://193.228.90.202", "https://lsp.dwbank.org"},
+		AllowOrigins:     []string{"http://193.228.90.202", "https://bookadd.ir"},
 		AllowMethods:     []string{"GET", "POST", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
