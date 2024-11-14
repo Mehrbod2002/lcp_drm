@@ -1,0 +1,10 @@
+{
+    "apps": [
+      {
+        "name": "lcpserver",
+        "script": "lcpserver",
+        "cwd": "/root/server/configs"
+      }
+    ]
+  }
+  
