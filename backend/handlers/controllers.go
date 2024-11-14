@@ -250,6 +250,7 @@ func UpdateContentInLCP(contentID string, key []byte, filePath string) error {
 		"protected-content-disposition": contentID,
 		"content-encryption-key":        base64.StdEncoding.EncodeToString(key),
 	}
+
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %v", err)
@@ -266,6 +267,7 @@ func UpdateContentInLCP(contentID string, key []byte, filePath string) error {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println(err)
 		return fmt.Errorf("failed to send request: %v", err)
 	}
 	defer resp.Body.Close()
