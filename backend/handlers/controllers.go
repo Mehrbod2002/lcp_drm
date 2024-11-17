@@ -80,14 +80,14 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	cmd := exec.Command("/usr/bin/htpasswd", "-b", "/root/server/tmp/htpasswd", username, password)
-	if output, err := cmd.CombinedOutput(); err != nil {
-		log.Printf("Encryption failed: %s\n", string(output))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Encryption failed"})
-		return
-	}
+	// cmd := exec.Command("/usr/bin/htpasswd", "-b", "/root/server/tmp/htpasswd", username, password)
+	// if output, err := cmd.CombinedOutput(); err != nil {
+	// 	log.Printf("Encryption failed: %s\n", string(output))
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "Encryption failed"})
+	// 	return
+	// }
 
-	cmd = exec.Command("/bin/bash", "encrypt.sh", uploadPath, uID, uID, base64.StdEncoding.EncodeToString(key))
+	cmd := exec.Command("/bin/bash", "encrypt.sh", uploadPath, uID, uID, base64.StdEncoding.EncodeToString(key))
 	if output, err := cmd.CombinedOutput(); err != nil {
 		log.Printf("Encryption failed: %s\n", string(output))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Encryption failed"})
